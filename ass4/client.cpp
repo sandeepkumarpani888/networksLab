@@ -84,7 +84,7 @@ int main ()
 
     // Assign values to the server address.
     srv_addr.sin_family = AF_INET; // IPv4.
-    srv_addr.sin_port   = htons (28912); // Port Number.
+    srv_addr.sin_port   = htons (28932); // Port Number.
 
     rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
                                   * type conversion of the pointer here. */
@@ -100,8 +100,119 @@ int main ()
     rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
     checkConnect(rst);
     printf("CONNECTION SUCCESSFUL!!\n");
-    printf(">");
+    char buf[BUF_SIZE]={'\0'};
 
     /**************** Send-Receive messages ************************/
-    //qwe
+    for(int counter1=0;counter1<=0;counter1++){
+        printf("Do you wish to send(1) or recieve email(2)\n");
+        printf(">");
+        //printf("lol\n");
+        int opertaionType;
+        scanf("%d",&opertaionType);
+        if(opertaionType==1){
+            printf("Please enter your email id?\n>");
+            std::string fromId;
+            std::string fromDomain;
+            std::cin>>fromId;
+            std::vector<std::string> emailSplit=split(fromId,'@');
+            fromDomain=emailSplit[1];
+            //get sender's email
+            printf("Please enter the number of recipients\n>");
+            int recipientCount;
+            std::vector<std::string> recipientEmail;
+            scanf("%d",&recipientCount);
+            printf("Please enter the recipient emails one per line\n");
+            for(int recpCount=0;recpCount<recipientCount;recpCount++){
+                printf(">");
+                std::string emailID;
+                std::cin>>emailID;
+                recipientEmail.push_back(emailID);
+            }
+            //got the list of recipient ids;
+            printf("Enter the data you want to send ending with a single .\n");
+            std::string lineInput;
+            std::vector<std::string> data;
+            while(true){
+                std::getline(std::cin,lineInput);
+                data.push_back(lineInput);
+                if(lineInput[0]=='.' && lineInput.length()==1){
+                    //data=data+".";
+                    break;
+                }
+            }
+            printf("sending data ?/?\n");
+            
+            //prepare the emails to be sent
+            std::vector<Email> emailList;
+            for(int recpCount=0;recpCount<recipientCount;recpCount++){
+                Email email;
+                email.setFromId(fromId);
+                email.setToId(recipientEmail[recpCount]);
+                //email.setBody(data);
+                email.setTimeNow();
+                emailList.push_back(email);
+            }
+
+            for(int recpCount=0;recpCount<recipientCount;recpCount++){
+                //send HELO
+                std::string input;
+                input="HELO "+fromDomain;
+                strcpy(buf,input.c_str());
+                rst=write(sfd,buf,BUF_SIZE);
+                checkSend(rst);
+                rst=recv(sfd,buf,BUF_SIZE,0);
+                printf(">");
+                printf("%s\n",buf);
+                //
+
+                //send mail from
+                input="MAIL FROM: ";
+                input=input+emailList[recpCount].getFromId();
+                strcpy(buf,input.c_str());
+                //printf("%s..\n",buf);
+                rst=write(sfd,buf,BUF_SIZE);
+                checkSend(rst);
+                rst=recv(sfd,buf,BUF_SIZE,0);
+                printf(">%s\n",buf);
+                //
+
+                //send Recipiant Email
+                input="RCPT TO: "+emailList[recpCount].getToId();
+                strcpy(buf,input.c_str());
+                rst=write(sfd,buf,BUF_SIZE);
+                checkSend(rst);
+                rst=recv(sfd,buf,BUF_SIZE,0);
+                printf(">%s\n",buf);
+                //
+
+                //send the data
+                input="DATA";
+                strcpy(buf,input.c_str());
+                rst=write(sfd,buf,BUF_SIZE);
+                checkSend(rst);
+                rst=recv(sfd,buf,BUF_SIZE,0);
+                printf(">%s\n",buf);
+                for(int dataLength=0;dataLength<data.size();dataLength++){
+                    strcpy(buf,data[dataLength].c_str());
+                    rst=write(sfd,buf,BUF_SIZE);
+                    checkSend(rst);
+                }
+                rst=recv(sfd,buf,BUF_SIZE,0);
+                printf(">%s\n",buf);
+                //
+
+                //quit
+                rst=write(sfd,"QUIT",BUF_SIZE);
+                checkSend(rst);
+                rst=recv(sfd,buf,BUF_SIZE,0);
+                checkRecieve(rst);
+                printf(">%s\n",buf);
+                //
+            }
+            //
+        }
+        else if(opertaionType==2){
+            //qwe
+        }
+    }
 }

@@ -90,7 +90,7 @@ int main (){
 
         // Assign values to the server address.
         srv_addr.sin_family = AF_INET; // IPv4.
-        srv_addr.sin_port   = htons (28912); // Port Number.
+        srv_addr.sin_port   = htons (28932); // Port Number.
         
         rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To 
                                   * type conversion of the pointer here. */
@@ -110,8 +110,9 @@ int main (){
             perror ("Server: Bind failed");
             exit (1);
         }
+        char buf[BUF_SIZE]={'\0'};
 
-        for(int numberOfIterations=0;numberOfIterations<2;numberOfIterations++){
+        for(int numberOfIterations=0;numberOfIterations<=1;numberOfIterations++){
             printf("Max connections allowed to wait: %d\n",SOMAXCONN);
             rst=listen(sfd,6);
             if(rst==-1){
@@ -128,12 +129,78 @@ int main (){
             /***********INTERACTION IO*************/
             pid_t childProcess=fork();
             if(childProcess==0){
-                //qwe
-            }
-            else{
-                //qwe
+                Email email;
+                std::string data;
+                
+                rst=recv(cfd,buf,BUF_SIZE,0);
+                checkRecieve(rst);
+                printf(">%s\n",buf);
+                rst=write(cfd,"250 OK",BUF_SIZE);
+                //HELO
+
+
+                rst=recv(cfd,buf,BUF_SIZE,0);
+                checkRecieve(rst);
+                printf(">%s\n",buf);
+                data=buf;
+                std::vector<std::string> dataSplit=split(data,' ');
+                email.setFromId(dataSplit[2]);
+                rst=write(cfd,"250 OK",BUF_SIZE);
+                checkSend(rst);
+                //FROM EMAIL
+
+                rst=recv(cfd,buf,BUF_SIZE,0);
+                checkRecieve(rst);
+                printf(">%s\n",buf);
+                data=buf;
+                dataSplit=split(data,' ');
+                email.setToId(dataSplit[2]);
+                rst=write(cfd,"250 OK",BUF_SIZE);
+                checkSend(rst);
+                //TO EMAIL
+
+                rst=recv(cfd,buf,BUF_SIZE,0);
+                checkRecieve(rst);
+                printf(">%s\n",buf);
+                rst=write(cfd,"354 start mail input",BUF_SIZE);
+                checkSend(rst);
+                data="";
+                std::string input="";
+
+                while(true){
+                    rst=recv(cfd,buf,BUF_SIZE,0);
+                    checkRecieve(rst);
+                    printf(">%s\n",buf);
+                    std::string dataInput(buf);
+                    if(dataInput[0]=='.' && dataInput.length()==1){
+                        data=data+".";
+                        break;
+                    }
+                    else{
+                        data=data+dataInput+"}";
+                    }
+                }
+                rst=write(cfd,"250 OK",BUF_SIZE);
+                checkSend(rst);
+                email.setBody(data);
+                //DATA RECIEVED
+
+                rst=recv(cfd,buf,BUF_SIZE,0);
+                checkRecieve(rst);
+                printf(">%s\n",buf);
+                rst=write(cfd,"221 service closed",BUF_SIZE);
+                checkSend(rst);
+                email.setTimeNow();
+                email.serialiseEmail();
+                //QUIT
+
+
+                return 0;
             }
         }
+        rst=close(sfd); // Close the socket file descriptor.
+        checkClose(rst);
+
     }
     else{
         int statusTcp=0;

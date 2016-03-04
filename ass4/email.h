@@ -11,7 +11,6 @@
 #include <dirent.h>
 
 class Email{
-    char* subject;
     struct tm time_;
     char* fromId;
     char* toId;
@@ -20,7 +19,6 @@ class Email{
 
 public:
     Email() {
-        subject=NULL;
         fromId=NULL;
         toId=NULL;
         body=NULL;
@@ -28,29 +26,6 @@ public:
     }
 
     Email(struct tm t): time_(t) {};
-
-    void setSubject(std::string t) {
-        if (subject != NULL) {
-            free(subject);
-            subject = NULL;
-        }
-        subject = (char *)malloc(sizeof(char)*(strlen(t.c_str())+1));
-        strcpy(subject, t.c_str());
-    }
-
-    void setSubject(char* t) {
-        if (subject != NULL) {
-            free(subject);
-            subject = NULL;
-        }
-        subject = (char *)malloc(sizeof(char)*(strlen(t)+1));
-        strcpy(subject, t);
-    }
-
-    std::string getSubject() {
-        return std::string(subject);
-    }
-    //subject
 
     void setFromId(std::string t) {
         if (fromId != NULL) {
@@ -152,9 +127,6 @@ public:
             //free(content);
             toId = NULL;
         }
-        if(subject!=NULL){
-            subject=NULL;
-        }
         if(body!=NULL){
             body=NULL;
         }
@@ -162,11 +134,10 @@ public:
 
     void serialiseEmail(){
         std::stringstream ss;
-        ss<<"/home/sandeep/Networks_lab/ass4/emailData/";
+        ss<<"./emailData/";
         ss << time_.tm_year << "_" <<  time_.tm_mon << "_" << time_.tm_mday << "_" << std::string(fromId) << ".email";
         std::ofstream file(ss.str().c_str());
         file << std::string(fromId) << std::endl << std::string(toId)<<std::endl
-        << std::string(subject)<<std::endl
         << time_.tm_year << " " <<  time_.tm_mon << " " << time_.tm_mday << " " << time_.tm_wday
         << " " << time_.tm_yday << " " << time_.tm_hour << " " << time_.tm_min << " " << time_.tm_sec << std::endl
         <<std::string(body)<<std::endl;
@@ -181,17 +152,13 @@ public:
         //file >> ID;
         std::string fromId;
         std::string toId;
-        std::string subject;
         std::string body;
         std::getline(file,fromId);
         std::getline(file,toId);
-        std::getline(file,subject);
         this->setFromId(fromId);
         this->setToId(toId);
-        this->setSubject(subject);
         std::cout<<"fromId->"<<this->fromId<<"\n";
         std::cout<<"toId->"<<this->toId<<"\n";
-        std::cout<<"subject->"<<this->subject<<"\n";
         file >> time_.tm_year >> time_.tm_mon >> time_.tm_mday >> time_.tm_wday
             >> time_.tm_yday >> time_.tm_hour >> time_.tm_min >> time_.tm_sec;
         std::getline(file,body);
