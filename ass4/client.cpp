@@ -84,6 +84,7 @@ int main ()
 
     // Assign values to the server address.
     srv_addr.sin_family = AF_INET; // IPv4.
+
     srv_addr.sin_port   = htons (28932); // Port Number.
 
     rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
@@ -100,7 +101,6 @@ int main ()
     rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
     checkConnect(rst);
     printf("CONNECTION SUCCESSFUL!!\n");
-    char buf[BUF_SIZE]={'\0'};
 
     /**************** Send-Receive messages ************************/
     for(int counter1=0;counter1<=0;counter1++){
@@ -152,8 +152,10 @@ int main ()
                 email.setTimeNow();
                 emailList.push_back(email);
             }
+            printf("%d-->\n",recipientCount);
 
             for(int recpCount=0;recpCount<recipientCount;recpCount++){
+                char buf[BUF_SIZE]={'\0'};
                 //send HELO
                 std::string input;
                 input="HELO "+fromDomain;
@@ -207,12 +209,135 @@ int main ()
                 rst=recv(sfd,buf,BUF_SIZE,0);
                 checkRecieve(rst);
                 printf(">%s\n",buf);
+                rst=close(sfd);
+                checkClose(rst);
+                sfd = socket (AF_INET, SOCK_STREAM, 0);
+                addrlen = sizeof (struct sockaddr_in);
+                memset (&srv_addr, 0, addrlen);
+                srv_addr.sin_family = AF_INET; // IPv4.
+                srv_addr.sin_port   = htons (28932); // Port Number.
+                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr);
+                rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
+                checkConnect(rst);
                 //
             }
             //
         }
         else if(opertaionType==2){
-            //qwe
+            char buf[BUF_SIZE]={'\0'};
+            printf("Please enter your email id?\n>");
+            std::string fromId;
+            std::string fromDomain;
+            std::cin>>fromId;
+            std::vector<std::string> emailSplit=split(fromId,'@');
+            fromDomain=emailSplit[1];
+
+            std::string input;
+            input="USER "+fromId;
+            strcpy(buf,input.c_str());
+            rst=write(sfd,buf,BUF_SIZE);
+            checkSend(rst);
+            rst=recv(sfd,buf,BUF_SIZE,0);
+            checkRecieve(rst);
+            printf(">%s\n",buf);
+            if(buf[0]=='-'){
+                rst=close(sfd);
+                checkClose(rst);
+                return 0;
+            }
+            //Got the email id
+
+            printf("Enter the password?\n>");
+            std::string password;
+            std::cin>>password;
+            input="PASS "+password;
+            strcpy(buf,input.c_str());
+            rst=write(sfd,buf,BUF_SIZE);
+            checkSend(rst);
+            rst=recv(sfd,buf,BUF_SIZE,0);
+            checkRecieve(rst);
+            printf(">%s\n",buf);
+            if(buf[0]=='-'){
+                rst=close(sfd);
+                checkClose(rst);
+                return 0;
+            }
+            //Got the password
+
+            //Get the list of all the emails present
+            input="LIST";
+            strcpy(buf,input.c_str());
+            rst=write(sfd,buf,BUF_SIZE);
+            checkSend(rst);
+            rst=recv(sfd,buf,BUF_SIZE,0);
+            checkRecieve(rst);
+            printf(">%s\n",buf);
+            int countOfEmails=0;
+            while(true){
+                memset(buf,'\0',BUF_SIZE);
+                recv(sfd,buf,BUF_SIZE,0);
+                checkRecieve(rst);
+                sleep(1);
+                input=buf;
+                printf("%s..\n",buf);
+                if(strlen(buf) && buf[0]=='.'){
+                    break;
+                }
+                else{
+                    countOfEmails++;
+                }
+            }
+            //
+
+            //select one of them
+            while(true){
+                printf("Select the id of the email you want to read?\n>");
+                int indexOfEmail=0;
+                scanf("%d",&indexOfEmail);
+                input="LIST "+std::to_string(indexOfEmail);
+                memset(buf,'\0',BUF_SIZE);
+                strcpy(buf,input.c_str());
+                rst=write(sfd,buf,BUF_SIZE);
+                checkSend(rst);
+                sleep(1);
+                rst=recv(sfd,buf,BUF_SIZE,0);
+                checkSend(rst);
+                printf("--->>%s\n",buf);
+                //sleep(5);
+                if(buf[0]=='+'){
+                    printf("%s\n",buf);
+                    while(true){
+                        rst=recv(sfd,buf,BUF_SIZE,0);
+                        checkRecieve(rst);
+                        input=buf;
+                        std::cout<<"message+ "<<input<<"\n";
+                        if(input.size()==1 && input[0]=='.'){
+                            break;
+                        }
+                        sleep(1);
+                    }
+                }
+                else{
+                    printf("message- %s\n",buf);
+                }
+                printf("Do you wish to recieve more messages?\n");
+                printf("Yes(1) or No(2)\n");
+                int opertaionType;
+                scanf("%d",&opertaionType);
+                if(opertaionType==2){
+                    break;
+                }
+            }
+            //
+
+            //quit
+            rst=write(sfd,"QUIT",BUF_SIZE);
+            checkSend(rst);
+            rst=recv(sfd,buf,BUF_SIZE,0);
+            checkRecieve(rst);
+            //
         }
+        rst=close(sfd);
+        checkClose(rst);
     }
 }

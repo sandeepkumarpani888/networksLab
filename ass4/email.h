@@ -157,8 +157,8 @@ public:
         std::getline(file,toId);
         this->setFromId(fromId);
         this->setToId(toId);
-        std::cout<<"fromId->"<<this->fromId<<"\n";
-        std::cout<<"toId->"<<this->toId<<"\n";
+        //std::cout<<"fromId->"<<this->fromId<<"\n";
+        //std::cout<<"toId->"<<this->toId<<"\n";
         file >> time_.tm_year >> time_.tm_mon >> time_.tm_mday >> time_.tm_wday
             >> time_.tm_yday >> time_.tm_hour >> time_.tm_min >> time_.tm_sec;
         std::getline(file,body);
@@ -167,7 +167,7 @@ public:
             ss <<body<< std::endl;
         }
         this->setBody(ss.str());
-        std::cout<<"body->"<<this->body<<"\n";
+        //std::cout<<"body->"<<this->body<<"\n";
     }
 
 
