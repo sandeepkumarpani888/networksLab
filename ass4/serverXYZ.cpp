@@ -14,7 +14,7 @@
 #include "email.h"
 
 int port_num = 23465;
-#define BUF_SIZE 3000
+#define BUF_SIZE 256
 
 int checkRecieve(int rst){
     if(rst==-1){
@@ -66,7 +66,6 @@ void redirectTo(std::string domainName,Email email){
         //INITIAL PART...MORE LIKE A BLACK-BOX ;)
         int rst; // Return status of functions.
         int cfd; // File descriptor for the client.
-
         /**************** Create a socket. *******************************/
         int sfd; // Socket file descriptor.
         sfd = socket (AF_INET, SOCK_STREAM, 0); /* AF_INET --> IPv4,
@@ -88,7 +87,7 @@ void redirectTo(std::string domainName,Email email){
         srv_addr.sin_family = AF_INET; // IPv4.
         srv_addr.sin_port   = htons (28932); // Port Number.
 
-        rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+        rst = inet_pton (AF_INET, "10.117.11.117", &srv_addr.sin_addr); /* To
                                       * type conversion of the pointer here. */
         if (rst <= 0)
         {
@@ -96,25 +95,25 @@ void redirectTo(std::string domainName,Email email){
             exit (1);
         }
         //INITIAL PART NOT THAT IMPORTANT
-        rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
-        checkConnect(rst);
-        printf("CONNECTION SUCCESSFUL!!\n");
         char buf[BUF_SIZE]={'\0'};
-
-        //forward data to other server in the same way
-
-        //SEND HELO
+        fd_set readfds;
+        FD_ZERO(&readfds);
+        FD_SET(sfd,&readfds);
+       //send HELO
         std::string input;
-        std::string fromDomain;
-        std::vector<std::string> emailSplit=split(email.getFromId(),'@');
-        fromDomain=emailSplit[1];
+        std::string fromDomain="xyz.com";
         input="HELO "+fromDomain;
-        memset(buf,'\0',BUF_SIZE);
         strcpy(buf,input.c_str());
-        rst=write(sfd,buf,input.size()+1);
+        //sleep(1);
+        rst=send(sfd,buf,BUF_SIZE,0);
+        printf("%s\n", buf);
         checkSend(rst);
-        memset(buf,'\0',BUF_SIZE);
-        rst=recv(sfd,buf,BUF_SIZE,0);
+        FD_ZERO(&readfds);
+        FD_SET(sfd,&readfds);
+        rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+        if(FD_ISSET(sfd,&readfds)){
+            rst=recv(sfd,buf,BUF_SIZE,0);
+        }
         printf(">");
         printf("%s\n",buf);
         //
@@ -124,10 +123,19 @@ void redirectTo(std::string domainName,Email email){
         input=input+email.getFromId();
         memset(buf,'\0',BUF_SIZE);
         strcpy(buf,input.c_str());
-        printf("%s..\n",buf);
-        rst=write(sfd,buf,input.size()+1);
+        //printf("%s..\n",buf);
+        //sleep(1);
+        rst=send(sfd,buf,BUF_SIZE,0);
+        printf("%s\n", buf);
         checkSend(rst);
-        rst=recv(sfd,buf,BUF_SIZE,0);
+        FD_ZERO(&readfds);
+        FD_SET(sfd,&readfds);
+        rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+        if(FD_ISSET(sfd,&readfds)){
+            printf("here\n");
+            memset(buf,'\0',BUF_SIZE);
+            rst=recv(sfd,buf,BUF_SIZE,0);
+        }
         printf(">%s\n",buf);
         //
 
@@ -135,9 +143,16 @@ void redirectTo(std::string domainName,Email email){
         input="RCPT TO: "+email.getToId();
         memset(buf,'\0',BUF_SIZE);
         strcpy(buf,input.c_str());
-        rst=write(sfd,buf,input.size()+1);
+        //sleep(1);
+        rst=send(sfd,buf,BUF_SIZE,0);
+        printf("%s\n", buf);
         checkSend(rst);
-        rst=recv(sfd,buf,BUF_SIZE,0);
+        FD_ZERO(&readfds);
+        FD_SET(sfd,&readfds);
+        rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+        if(FD_ISSET(sfd,&readfds)){
+            rst=recv(sfd,buf,BUF_SIZE,0);
+        }
         printf(">%s\n",buf);
         //
 
@@ -145,45 +160,46 @@ void redirectTo(std::string domainName,Email email){
         input="DATA";
         memset(buf,'\0',BUF_SIZE);
         strcpy(buf,input.c_str());
-        rst=write(sfd,buf,input.size()+1);
+        //sleep(1);
+        rst=send(sfd,buf,BUF_SIZE,0);
         checkSend(rst);
-        rst=recv(sfd,buf,BUF_SIZE,0);
+        FD_ZERO(&readfds);
+        FD_SET(sfd,&readfds);
+        rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+        if(FD_ISSET(sfd,&readfds)){
+            rst=recv(sfd,buf,BUF_SIZE,0);
+        }
         printf(">%s\n",buf);
         std::vector<std::string> data=split(email.getBody(),'}');
-        std::cout<<email.getBody()<<"\n";
         for(int dataLength=1;dataLength<data.size();dataLength++){
-            memset(buf,'\0',BUF_SIZE);
-            std::cout<<data[dataLength]<<"\n";
-            char buf_[256];
-            strcpy(buf_,data[dataLength].c_str());
-            //buf_[data[dataLength].length()];
-            for(int i=data[dataLength].length();i<BUF_SIZE;i++){
-                buf_[i]='\0';
-            }
-            printf(">%s\n",buf_);
-            rst=write(sfd,buf_,256);
+            strcpy(buf,data[dataLength].c_str());
+            //sleep(1);
+            rst=send(sfd,buf,BUF_SIZE,0);
             checkSend(rst);
-            sleep(1);
-            if(dataLength==data.size()-1){
-                break;
-            }
-            // rst=recv(sfd,buf,BUF_SIZE,0);
-            // checkRecieve(rst);
-            // printf("%s\n",buf);
-            // memset(buf,'\0',BUF_SIZE);
         }
-        //printf("herer\\n");
-        rst=recv(sfd,buf,BUF_SIZE,0);
+        FD_ZERO(&readfds);
+        FD_SET(sfd,&readfds);
+        rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+        if(FD_ISSET(sfd,&readfds)){
+            rst=recv(sfd,buf,BUF_SIZE,0);
+        }
         printf(">%s\n",buf);
         //
 
         //quit
-        rst=write(sfd,"QUIT",5);
+        sleep(1);
+        rst=send(sfd,"QUIT",BUF_SIZE,0);
         checkSend(rst);
-        rst=recv(sfd,buf,BUF_SIZE,0);
+        FD_ZERO(&readfds);
+        FD_SET(sfd,&readfds);
+        rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+        if(FD_ISSET(sfd,&readfds)){
+            rst=recv(sfd,buf,BUF_SIZE,0);
+        }
         checkRecieve(rst);
         printf(">%s\n",buf);
-        //
+        rst=close(sfd);
+        checkClose(rst);
     }
     else{
         int status1=0;
@@ -285,9 +301,9 @@ int main (){
 
         // Assign values to the server address.
         srv_addr.sin_family = AF_INET; // IPv4.
-        srv_addr.sin_port   = htons (28942); // Port Number.
+        srv_addr.sin_port   = htons (28962); // Port Number.
         
-        rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To 
+        rst = inet_pton (AF_INET, "10.117.11.81", &srv_addr.sin_addr); /* To 
                                   * type conversion of the pointer here. */
         if (rst <= 0)
         {
@@ -324,52 +340,113 @@ int main (){
             /***********INTERACTION IO*************/
             pid_t childProcess=fork();
             if(childProcess==0){
+                //sleep(2);
                 printf("ENTERING CHILD with counter->%d\n",numberOfIterations);//debugging
+                //sleep(2);
                 Email email;
                 std::string data;
-                
+                fd_set readfds;
+                FD_ZERO(&readfds);
+                FD_SET(cfd,&readfds);
+                // struct timeval tv;
+                // tv.tv_usec=0;
+                // tv.tv_sec=;
+                rst=select(cfd+1,&readfds,NULL,NULL,NULL);
                 rst=recv(cfd,buf,BUF_SIZE,0);
                 checkRecieve(rst);
                 printf(">%s\n",buf);
                 if(buf[0]=='H'){
                     //SMTP operations
-                    rst=write(cfd,"250 OK",BUF_SIZE);
+                    std::string temp="250 OK";
+                    memset(buf,'\0',BUF_SIZE);
+                    strcpy(buf,temp.c_str());
+                    rst=send(cfd,buf,BUF_SIZE,0);
+                    //sleep(1);
                     //HELO
-
-                    rst=recv(cfd,buf,BUF_SIZE,0);
-                    checkRecieve(rst);
-                    printf(">%s\n",buf);
+                    FD_ZERO(&readfds);
+                    FD_SET(cfd,&readfds);
+                    rst=select(cfd+1,&readfds,NULL,NULL,NULL);
+                    if(FD_ISSET(cfd,&readfds)){
+                        memset(buf,'\0',BUF_SIZE);
+                        printf("herer->\n");
+                        rst=recv(cfd,buf,BUF_SIZE,0);
+                        for(int i=0;i<10;i++){
+                            printf("%c",buf[i]);
+                        }
+                        printf("\n");
+                    }
+                    printf(">%s--\n",buf);
                     data=buf;
                     std::vector<std::string> dataSplit=split(data,' ');
                     email.setFromId(dataSplit[2]);
-                    printf("%s-->\n",email.getFromId());
+                    //printf("%s-->\n",email.getFromId());
                     std::cout<<email.getFromId()<<"\n";
-                    rst=write(cfd,"250 OK",BUF_SIZE);
+                    memset(buf,'\0',BUF_SIZE);
+                    temp="250 OK";
+                    strcpy(buf,temp.c_str());
+                    rst=send(cfd,buf,BUF_SIZE,0);
                     checkSend(rst);
                     //FROM EMAIL
 
-                    rst=recv(cfd,buf,BUF_SIZE,0);
-                    checkRecieve(rst);
-                    printf(">%s\n",buf);
+                    //sleep(1);
+                    fd_set readfds2;
+                    FD_ZERO(&readfds2);
+                    FD_SET(cfd,&readfds2);
+                    rst=select(cfd+1,&readfds2,NULL,NULL,NULL);
+                    if(FD_ISSET(cfd,&readfds2)){
+                        memset(buf,'\0',BUF_SIZE);
+                        printf("herer_fromemail->\n");
+                        rst=recv(cfd,buf,BUF_SIZE,0);
+                        printf("--%d\n",rst);
+                        for(int i=0;i<BUF_SIZE;i++){
+                            if(buf[i]!=buf[0]){
+                                //printf("%c-%d\n",buf[i],i);
+                                //sleep(1);
+                            }
+                        }
+                        printf("\n");
+                    }
+                    printf("->%s\n",buf);
                     data=buf;
                     dataSplit=split(data,' ');
                     email.setToId(dataSplit[2]);
-                    rst=write(cfd,"250 OK",BUF_SIZE);
+                    memset(buf,'\0',BUF_SIZE);
+                    temp="250 OK";
+                    strcpy(buf,temp.c_str());
+                    rst=send(cfd,buf,BUF_SIZE,0);
                     checkSend(rst);
                     //TO EMAIL
 
-                    rst=recv(cfd,buf,BUF_SIZE,0);
-                    checkRecieve(rst);
-                    printf(">%s\n",buf);
-                    rst=write(cfd,"354 start mail input",BUF_SIZE);
+                    //sleep(1);
+                    fd_set readfds1;
+                    FD_ZERO(&readfds1);
+                    FD_SET(cfd,&readfds1);
+                    rst=select(cfd+1,&readfds1,NULL,NULL,NULL);
+                    if(FD_ISSET(cfd,&readfds1)){
+                        memset(buf,'\0',BUF_SIZE);
+                        printf("herer->\n");
+                        rst=recv(cfd,buf,BUF_SIZE,0);
+                    }
+                    printf("-->%s\n",buf);
+                    memset(buf,'\0',BUF_SIZE);
+                    temp="354 start mail input";
+                    strcpy(buf,temp.c_str());
+                    rst=send(cfd,buf,BUF_SIZE,0);
                     checkSend(rst);
                     data="";
                     std::string input="";
 
                     while(true){
-                        rst=recv(cfd,buf,BUF_SIZE,0);
-                        checkRecieve(rst);
-                        printf(">%s\n",buf);
+                        //sleep(1);
+                        FD_ZERO(&readfds);
+                        FD_SET(cfd,&readfds);
+                        rst=select(cfd+1,&readfds,NULL,NULL,NULL);
+                        if(FD_ISSET(cfd,&readfds)){
+                            memset(buf,'\0',BUF_SIZE);
+                            printf("herer->\n");
+                            rst=recv(cfd,buf,BUF_SIZE,0);
+                        }
+                        printf("---->%s\n",buf);
                         std::string dataInput(buf);
                         if(dataInput[0]=='.' && dataInput.length()==1){
                             data=data+".";
@@ -379,15 +456,28 @@ int main (){
                             data=data+dataInput+"}";
                         }
                     }
-                    rst=write(cfd,"250 OK",BUF_SIZE);
+                    memset(buf,'\0',BUF_SIZE);
+                    temp="250 OK";
+                    strcpy(buf,temp.c_str());
+                    rst=send(cfd,buf,BUF_SIZE,0);
                     checkSend(rst);
                     email.setBody(data);
                     //DATA RECIEVED
 
-                    rst=recv(cfd,buf,BUF_SIZE,0);
-                    checkRecieve(rst);
-                    printf(">%s\n",buf);
-                    rst=write(cfd,"221 service closed",BUF_SIZE);
+                    //sleep(1);
+                    FD_ZERO(&readfds);
+                    FD_SET(cfd,&readfds);
+                    rst=select(cfd+1,&readfds,NULL,NULL,NULL);
+                    if(FD_ISSET(cfd,&readfds)){
+                        memset(buf,'\0',BUF_SIZE);
+                        printf("herer->\n");
+                        rst=recv(cfd,buf,BUF_SIZE,0);
+                    }
+                    printf("++>%s\n",buf);
+                    memset(buf,'\0',BUF_SIZE);
+                    temp="221 service closed";
+                    strcpy(buf,temp.c_str());
+                    rst=send(cfd,buf,BUF_SIZE,0);
                     checkSend(rst);
                     email.setTimeNow();
                     //email.serialiseEmail();
@@ -401,6 +491,7 @@ int main (){
                         redirectTo(domainTo[1],email);
                     }
                     else{
+                        printf("here-->\n");
                         email.serialiseEmail();
                     }
                 }
@@ -413,37 +504,59 @@ int main (){
                     getLockOnDirectory();
 
                     if(nameMapping.count(fromId)==0){
-                        rst=write(cfd,"-NOT PRESENT",BUF_SIZE);
+                        rst=send(cfd,"-NOT PRESENT",BUF_SIZE,0);
                         break;
                     }
                     else{
-                        rst=write(cfd,"+GREEN TO GO",BUF_SIZE);
+                        rst=send(cfd,"+GREEN TO GO",BUF_SIZE,0);
                     }
                     //checked the existence of user
 
                     //get the password
-                    rst=recv(cfd,buf,BUF_SIZE,0);
+                    FD_ZERO(&readfds);
+                    FD_SET(cfd,&readfds);
+                    rst=select(cfd+1,&readfds,NULL,NULL,NULL);
+                    if(FD_ISSET(cfd,&readfds)){
+                        memset(buf,'\0',BUF_SIZE);
+                        printf("herer->\n");
+                        rst=recv(cfd,buf,BUF_SIZE,0);
+                        for(int i=0;i<10;i++){
+                            printf("%c",buf[i]);
+                        }
+                        printf("\n");
+                    }
                     checkRecieve(rst);
                     std::string data(buf);
                     std::cout<<"recieved ->"<<data<<"\n";
                     std::vector<std::string> dataSplit=split(data,' ');
                     if(dataSplit[1]=="carrot"){
-                        rst=write(cfd,"+AND YOU GET ACCESS",BUF_SIZE);
+                        rst=send(cfd,"+AND YOU GET ACCESS",BUF_SIZE,0);
                     }
                     else{
-                        rst=write(cfd,"-Try gmail for a change",BUF_SIZE);
+                        rst=send(cfd,"-Try gmail for a change",BUF_SIZE,0);
                         break;
                     }
 
                     while(true){
                         getLockOnDirectory();
                         //LIST all the emails
-                        rst=recv(cfd,buf,BUF_SIZE,0);
+                        FD_ZERO(&readfds);
+                        FD_SET(cfd,&readfds);
+                        rst=select(cfd+1,&readfds,NULL,NULL,NULL);
+                        if(FD_ISSET(cfd,&readfds)){
+                            memset(buf,'\0',BUF_SIZE);
+                            printf("herer->\n");
+                            rst=recv(cfd,buf,BUF_SIZE,0);
+                            for(int i=0;i<10;i++){
+                                printf("%c",buf[i]);
+                            }
+                            printf("\n");
+                        }                        
                         checkRecieve(rst);
                         printf("---+>>%s\n",buf);
                         std::string input="+OK "+std::to_string(emailList[nameMapping[fromId]].size());
                         strcpy(buf,input.c_str());
-                        rst=write(cfd,buf,BUF_SIZE);
+                        rst=send(cfd,buf,BUF_SIZE,0);
                         checkSend(rst);
                         for(int index=0;index<=emailList[nameMapping[fromId]].size();index++){
                             std::string input="";
@@ -454,7 +567,7 @@ int main (){
                                 buf[0]='.';
                                 printf("-->>>>%s\n",buf);
                                 printf("-->index->%d\n",index);
-                                rst=write(cfd,buf,BUF_SIZE);
+                                rst=send(cfd,buf,BUF_SIZE,0);
                                 checkSend(rst);
                                 break;
                             }
@@ -464,14 +577,25 @@ int main (){
                             index--;
                             strcpy(buf,input.c_str());
                             printf("-->>>%s\n",buf);
-                            rst=write(cfd,buf,BUF_SIZE);
+                            rst=send(cfd,buf,BUF_SIZE,0);
                             checkSend(rst);
                             printf("-->index->%d\n",index);
                             //sleep(1);
                         }
 
                         printf("entering loop\n");
-                        rst=recv(cfd,buf,BUF_SIZE,0);
+                        FD_ZERO(&readfds);
+                        FD_SET(cfd,&readfds);
+                        rst=select(cfd+1,&readfds,NULL,NULL,NULL);
+                        if(FD_ISSET(cfd,&readfds)){
+                            memset(buf,'\0',BUF_SIZE);
+                            printf("herer->\n");
+                            rst=recv(cfd,buf,BUF_SIZE,0);
+                            for(int i=0;i<10;i++){
+                                printf("%c",buf[i]);
+                            }
+                            printf("\n");
+                        }
                         checkRecieve(rst);
                         printf("here====%s\n",buf);
                         input=buf;
@@ -487,12 +611,12 @@ int main (){
                                 strcpy(buf,input_.c_str());
                                 printf("messafe-->%s\n",buf);
                                 printf("OKAY\n");
-                                rst=write(cfd,buf,BUF_SIZE);
+                                rst=send(cfd,buf,BUF_SIZE,0);
                                 checkSend(rst);
                             }
                             else{
                                 printf("not okay\n");
-                                rst=write(cfd,"-ERROR",BUF_SIZE);
+                                rst=send(cfd,"-ERROR",BUF_SIZE,0);
                                 break;
                             }
                             messaageId--;
@@ -506,14 +630,14 @@ int main (){
                                 else{
                                     strcpy(buf,dataSplit[index].c_str());
                                 }
-                                rst=write(cfd,buf,BUF_SIZE);
+                                rst=send(cfd,buf,BUF_SIZE,0);
                                 printf("message sent->%s..%d\n",buf,strlen(buf));
                                 checkSend(rst);
                                 sleep(1);
                             }
                         }
                         else if(buf[0]=='Q'){
-                            rst=write(cfd,"+Signing off",BUF_SIZE);
+                            rst=send(cfd,"+Signing off",BUF_SIZE,0);
                             checkSend(rst);
                             break;
                         }

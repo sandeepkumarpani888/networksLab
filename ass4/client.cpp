@@ -14,7 +14,7 @@
 #include "email.h"
 
 int port_num = 23465;
-#define BUF_SIZE 3000
+#define BUF_SIZE 256
 
 int checkRecieve(int rst){
     if(rst==-1){
@@ -124,9 +124,9 @@ int main ()
                 // Assign values to the server address.
                 srv_addr.sin_family = AF_INET; // IPv4.
 
-                srv_addr.sin_port   = htons (28932); // Port Number.
+                srv_addr.sin_port   = htons (28962); // Port Number.
 
-                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+                rst = inet_pton (AF_INET, "10.117.11.117", &srv_addr.sin_addr); /* To
                                               * type conversion of the pointer here. */
                 if (rst <= 0)
                 {
@@ -149,9 +149,9 @@ int main ()
                 // Assign values to the server address.
                 srv_addr.sin_family = AF_INET; // IPv4.
 
-                srv_addr.sin_port   = htons (28942); // Port Number.
+                srv_addr.sin_port   = htons (28962); // Port Number.
 
-                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+                rst = inet_pton (AF_INET, "10.117.11.81", &srv_addr.sin_addr); /* To
                                               * type conversion of the pointer here. */
                 if (rst <= 0)
                 {
@@ -206,13 +206,23 @@ int main ()
 
             for(int recpCount=0;recpCount<recipientCount;recpCount++){
                 char buf[BUF_SIZE]={'\0'};
-                //send HELO
+                fd_set readfds;
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+               //send HELO
                 std::string input;
                 input="HELO "+fromDomain;
                 strcpy(buf,input.c_str());
-                rst=write(sfd,buf,BUF_SIZE);
+                //sleep(1);
+                rst=send(sfd,buf,BUF_SIZE,0);
+                printf("%s\n", buf);
                 checkSend(rst);
-                rst=recv(sfd,buf,BUF_SIZE,0);
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+                rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                if(FD_ISSET(sfd,&readfds)){
+                    rst=recv(sfd,buf,BUF_SIZE,0);
+                }
                 printf(">");
                 printf("%s\n",buf);
                 //
@@ -220,43 +230,80 @@ int main ()
                 //send mail from
                 input="MAIL FROM: ";
                 input=input+emailList[recpCount].getFromId();
+                memset(buf,'\0',BUF_SIZE);
                 strcpy(buf,input.c_str());
                 //printf("%s..\n",buf);
-                rst=write(sfd,buf,BUF_SIZE);
+                //sleep(1);
+                rst=send(sfd,buf,BUF_SIZE,0);
+                printf("%s\n", buf);
                 checkSend(rst);
-                rst=recv(sfd,buf,BUF_SIZE,0);
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+                rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                if(FD_ISSET(sfd,&readfds)){
+                    printf("here\n");
+                    memset(buf,'\0',BUF_SIZE);
+                    rst=recv(sfd,buf,BUF_SIZE,0);
+                }
                 printf(">%s\n",buf);
                 //
 
                 //send Recipiant Email
                 input="RCPT TO: "+emailList[recpCount].getToId();
+                memset(buf,'\0',BUF_SIZE);
                 strcpy(buf,input.c_str());
-                rst=write(sfd,buf,BUF_SIZE);
+                //sleep(1);
+                rst=send(sfd,buf,BUF_SIZE,0);
+                printf("%s\n", buf);
                 checkSend(rst);
-                rst=recv(sfd,buf,BUF_SIZE,0);
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+                rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                if(FD_ISSET(sfd,&readfds)){
+                    rst=recv(sfd,buf,BUF_SIZE,0);
+                }
                 printf(">%s\n",buf);
                 //
 
                 //send the data
                 input="DATA";
+                memset(buf,'\0',BUF_SIZE);
                 strcpy(buf,input.c_str());
-                rst=write(sfd,buf,BUF_SIZE);
+                //sleep(1);
+                rst=send(sfd,buf,BUF_SIZE,0);
                 checkSend(rst);
-                rst=recv(sfd,buf,BUF_SIZE,0);
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+                rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                if(FD_ISSET(sfd,&readfds)){
+                    rst=recv(sfd,buf,BUF_SIZE,0);
+                }
                 printf(">%s\n",buf);
-                for(int dataLength=0;dataLength<data.size();dataLength++){
+                for(int dataLength=1;dataLength<data.size();dataLength++){
                     strcpy(buf,data[dataLength].c_str());
-                    rst=write(sfd,buf,BUF_SIZE);
+                    //sleep(1);
+                    rst=send(sfd,buf,BUF_SIZE,0);
                     checkSend(rst);
                 }
-                rst=recv(sfd,buf,BUF_SIZE,0);
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+                rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                if(FD_ISSET(sfd,&readfds)){
+                    rst=recv(sfd,buf,BUF_SIZE,0);
+                }
                 printf(">%s\n",buf);
                 //
 
                 //quit
-                rst=write(sfd,"QUIT",BUF_SIZE);
+                sleep(1);
+                rst=send(sfd,"QUIT",BUF_SIZE,0);
                 checkSend(rst);
-                rst=recv(sfd,buf,BUF_SIZE,0);
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+                rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                if(FD_ISSET(sfd,&readfds)){
+                    rst=recv(sfd,buf,BUF_SIZE,0);
+                }
                 checkRecieve(rst);
                 printf(">%s\n",buf);
                 rst=close(sfd);
@@ -265,8 +312,8 @@ int main ()
                 addrlen = sizeof (struct sockaddr_in);
                 memset (&srv_addr, 0, addrlen);
                 srv_addr.sin_family = AF_INET; // IPv4.
-                srv_addr.sin_port   = htons (28932); // Port Number.
-                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr);
+                srv_addr.sin_port   = htons (28962); // Port Number.
+                rst = inet_pton (AF_INET, "10.117.11.117", &srv_addr.sin_addr);
                 rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
                 checkConnect(rst);
                 //
@@ -289,9 +336,9 @@ int main ()
                 // Assign values to the server address.
                 srv_addr.sin_family = AF_INET; // IPv4.
 
-                srv_addr.sin_port   = htons (28932); // Port Number.
+                srv_addr.sin_port   = htons (28962); // Port Number.
 
-                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+                rst = inet_pton (AF_INET, "10.117.11.117", &srv_addr.sin_addr); /* To
                                               * type conversion of the pointer here. */
                 if (rst <= 0)
                 {
@@ -314,9 +361,9 @@ int main ()
                 // Assign values to the server address.
                 srv_addr.sin_family = AF_INET; // IPv4.
 
-                srv_addr.sin_port   = htons (28942); // Port Number.
+                srv_addr.sin_port   = htons (28962); // Port Number.
 
-                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+                rst = inet_pton (AF_INET, "10.117.11.81", &srv_addr.sin_addr); /* To
                                               * type conversion of the pointer here. */
                 if (rst <= 0)
                 {
@@ -331,14 +378,20 @@ int main ()
                 checkConnect(rst);
                 printf("CONNECTION SUCCESSFUL!!\n");
             }
-
+            fd_set readfds;
+            FD_ZERO(&readfds);
+            FD_SET(sfd,&readfds);
             std::string input;
             input="USER "+fromId;
             strcpy(buf,input.c_str());
-            rst=write(sfd,buf,BUF_SIZE);
+            rst=send(sfd,buf,BUF_SIZE,0);
             checkSend(rst);
-            rst=recv(sfd,buf,BUF_SIZE,0);
-            checkRecieve(rst);
+            FD_ZERO(&readfds);
+            FD_SET(sfd,&readfds);
+            rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+            if(FD_ISSET(sfd,&readfds)){
+                rst=recv(sfd,buf,BUF_SIZE,0);
+            }
             printf(">%s\n",buf);
             if(buf[0]=='-'){
                 rst=close(sfd);
@@ -352,10 +405,14 @@ int main ()
             std::cin>>password;
             input="PASS "+password;
             strcpy(buf,input.c_str());
-            rst=write(sfd,buf,BUF_SIZE);
+            rst=send(sfd,buf,BUF_SIZE,0);
             checkSend(rst);
-            rst=recv(sfd,buf,BUF_SIZE,0);
-            checkRecieve(rst);
+            FD_ZERO(&readfds);
+            FD_SET(sfd,&readfds);
+            rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+            if(FD_ISSET(sfd,&readfds)){
+                rst=recv(sfd,buf,BUF_SIZE,0);
+            }
             printf(">%s\n",buf);
             if(buf[0]=='-'){
                 rst=close(sfd);
@@ -370,16 +427,24 @@ int main ()
                 //Get the list of all the emails present
                 input="LIST";
                 strcpy(buf,input.c_str());
-                rst=write(sfd,buf,BUF_SIZE);
+                rst=send(sfd,buf,BUF_SIZE,0);
                 checkSend(rst);
-                rst=recv(sfd,buf,BUF_SIZE,0);
-                checkRecieve(rst);
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+                rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                if(FD_ISSET(sfd,&readfds)){
+                    rst=recv(sfd,buf,BUF_SIZE,0);
+                }
                 printf(">%s\n",buf);
                 int countOfEmails=0;
                 while(true){
                     memset(buf,'\0',BUF_SIZE);
-                    recv(sfd,buf,BUF_SIZE,0);
-                    checkRecieve(rst);
+                    FD_ZERO(&readfds);
+                    FD_SET(sfd,&readfds);
+                    rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                    if(FD_ISSET(sfd,&readfds)){
+                        rst=recv(sfd,buf,BUF_SIZE,0);
+                    }
                     sleep(1);
                     input=buf;
                     printf("%s..\n",buf);
@@ -398,18 +463,26 @@ int main ()
                 input="LIST "+std::to_string(indexOfEmail);
                 memset(buf,'\0',BUF_SIZE);
                 strcpy(buf,input.c_str());
-                rst=write(sfd,buf,BUF_SIZE);
+                rst=send(sfd,buf,BUF_SIZE,0);
                 checkSend(rst);
                 sleep(1);
-                rst=recv(sfd,buf,BUF_SIZE,0);
-                checkSend(rst);
+                FD_ZERO(&readfds);
+                FD_SET(sfd,&readfds);
+                rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                if(FD_ISSET(sfd,&readfds)){
+                    rst=recv(sfd,buf,BUF_SIZE,0);
+                }
                 printf("--->>%s\n",buf);
                 //sleep(5);
                 if(buf[0]=='+'){
                     printf("%s\n",buf);
                     while(true){
-                        rst=recv(sfd,buf,BUF_SIZE,0);
-                        checkRecieve(rst);
+                        FD_ZERO(&readfds);
+                        FD_SET(sfd,&readfds);
+                        rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+                        if(FD_ISSET(sfd,&readfds)){
+                            rst=recv(sfd,buf,BUF_SIZE,0);
+                        }
                         input=buf;
                         std::cout<<"message+ "<<input<<"\n";
                         if(input.size()==1 && input[0]=='.'){
@@ -432,10 +505,14 @@ int main ()
             //
 
             //quit
-            rst=write(sfd,"QUIT",BUF_SIZE);
+            rst=send(sfd,"QUIT",BUF_SIZE,0);
             checkSend(rst);
-            rst=recv(sfd,buf,BUF_SIZE,0);
-            checkRecieve(rst);
+            FD_ZERO(&readfds);
+            FD_SET(sfd,&readfds);
+            rst=select(sfd+1,&readfds,NULL,NULL,NULL);
+            if(FD_ISSET(sfd,&readfds)){
+                rst=recv(sfd,buf,BUF_SIZE,0);
+            }
             //
         }
         rst=close(sfd);
