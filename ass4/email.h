@@ -135,7 +135,8 @@ public:
     void serialiseEmail(){
         std::stringstream ss;
         ss<<"./emailData/";
-        ss << time_.tm_year << "_" <<  time_.tm_mon << "_" << time_.tm_mday << "_" << std::string(fromId) << ".email";
+        ss << time_.tm_year << "_" <<  time_.tm_mon << "_" << time_.tm_mday << "_" << 
+        time_.tm_hour<<"_"<<time_.tm_min<<"_"<<time_.tm_sec<<"_"<<std::string(fromId) << ".email";
         std::ofstream file(ss.str().c_str());
         file << std::string(fromId) << std::endl << std::string(toId)<<std::endl
         << time_.tm_year << " " <<  time_.tm_mon << " " << time_.tm_mday << " " << time_.tm_wday

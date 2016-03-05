@@ -98,9 +98,9 @@ int main ()
 
 
     /***************** Connect to the server ************************/
-    rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
-    checkConnect(rst);
-    printf("CONNECTION SUCCESSFUL!!\n");
+    // rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
+    // checkConnect(rst);
+    // printf("CONNECTION SUCCESSFUL!!\n");
 
     /**************** Send-Receive messages ************************/
     for(int counter1=0;counter1<=0;counter1++){
@@ -116,6 +116,56 @@ int main ()
             std::cin>>fromId;
             std::vector<std::string> emailSplit=split(fromId,'@');
             fromDomain=emailSplit[1];
+            if(fromDomain=="abc.com"){
+                //qwe
+                // Clear the two addresses.
+                memset (&srv_addr, 0, addrlen);
+
+                // Assign values to the server address.
+                srv_addr.sin_family = AF_INET; // IPv4.
+
+                srv_addr.sin_port   = htons (28932); // Port Number.
+
+                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+                                              * type conversion of the pointer here. */
+                if (rst <= 0)
+                {
+                    perror ("Client Presentation to network address conversion.\n");
+                    exit (1);
+                }
+                //INITIAL PART NOT THAT IMPORTANT
+
+
+                /***************** Connect to the server ************************/
+                rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
+                checkConnect(rst);
+                printf("CONNECTION SUCCESSFUL!!\n");
+            }
+            else if(fromDomain=="xyz.com"){
+                //qwe
+                // Clear the two addresses.
+                memset (&srv_addr, 0, addrlen);
+
+                // Assign values to the server address.
+                srv_addr.sin_family = AF_INET; // IPv4.
+
+                srv_addr.sin_port   = htons (28942); // Port Number.
+
+                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+                                              * type conversion of the pointer here. */
+                if (rst <= 0)
+                {
+                    perror ("Client Presentation to network address conversion.\n");
+                    exit (1);
+                }
+                //INITIAL PART NOT THAT IMPORTANT
+
+
+                /***************** Connect to the server ************************/
+                rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
+                checkConnect(rst);
+                printf("CONNECTION SUCCESSFUL!!\n");
+            }
             //get sender's email
             printf("Please enter the number of recipients\n>");
             int recipientCount;
@@ -231,6 +281,56 @@ int main ()
             std::cin>>fromId;
             std::vector<std::string> emailSplit=split(fromId,'@');
             fromDomain=emailSplit[1];
+            if(fromDomain=="abc.com"){
+                //qwe
+                // Clear the two addresses.
+                memset (&srv_addr, 0, addrlen);
+
+                // Assign values to the server address.
+                srv_addr.sin_family = AF_INET; // IPv4.
+
+                srv_addr.sin_port   = htons (28932); // Port Number.
+
+                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+                                              * type conversion of the pointer here. */
+                if (rst <= 0)
+                {
+                    perror ("Client Presentation to network address conversion.\n");
+                    exit (1);
+                }
+                //INITIAL PART NOT THAT IMPORTANT
+
+
+                /***************** Connect to the server ************************/
+                rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
+                checkConnect(rst);
+                printf("CONNECTION SUCCESSFUL!!\n");
+            }
+            else if(fromDomain=="xyz.com"){
+                //qwe
+                // Clear the two addresses.
+                memset (&srv_addr, 0, addrlen);
+
+                // Assign values to the server address.
+                srv_addr.sin_family = AF_INET; // IPv4.
+
+                srv_addr.sin_port   = htons (28942); // Port Number.
+
+                rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
+                                              * type conversion of the pointer here. */
+                if (rst <= 0)
+                {
+                    perror ("Client Presentation to network address conversion.\n");
+                    exit (1);
+                }
+                //INITIAL PART NOT THAT IMPORTANT
+
+
+                /***************** Connect to the server ************************/
+                rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
+                checkConnect(rst);
+                printf("CONNECTION SUCCESSFUL!!\n");
+            }
 
             std::string input;
             input="USER "+fromId;
@@ -264,33 +364,34 @@ int main ()
             }
             //Got the password
 
-            //Get the list of all the emails present
-            input="LIST";
-            strcpy(buf,input.c_str());
-            rst=write(sfd,buf,BUF_SIZE);
-            checkSend(rst);
-            rst=recv(sfd,buf,BUF_SIZE,0);
-            checkRecieve(rst);
-            printf(">%s\n",buf);
-            int countOfEmails=0;
-            while(true){
-                memset(buf,'\0',BUF_SIZE);
-                recv(sfd,buf,BUF_SIZE,0);
-                checkRecieve(rst);
-                sleep(1);
-                input=buf;
-                printf("%s..\n",buf);
-                if(strlen(buf) && buf[0]=='.'){
-                    break;
-                }
-                else{
-                    countOfEmails++;
-                }
-            }
-            //
-
             //select one of them
             while(true){
+
+                //Get the list of all the emails present
+                input="LIST";
+                strcpy(buf,input.c_str());
+                rst=write(sfd,buf,BUF_SIZE);
+                checkSend(rst);
+                rst=recv(sfd,buf,BUF_SIZE,0);
+                checkRecieve(rst);
+                printf(">%s\n",buf);
+                int countOfEmails=0;
+                while(true){
+                    memset(buf,'\0',BUF_SIZE);
+                    recv(sfd,buf,BUF_SIZE,0);
+                    checkRecieve(rst);
+                    sleep(1);
+                    input=buf;
+                    printf("%s..\n",buf);
+                    if(strlen(buf) && buf[0]=='.'){
+                        break;
+                    }
+                    else{
+                        countOfEmails++;
+                    }
+                }
+                //
+
                 printf("Select the id of the email you want to read?\n>");
                 int indexOfEmail=0;
                 scanf("%d",&indexOfEmail);

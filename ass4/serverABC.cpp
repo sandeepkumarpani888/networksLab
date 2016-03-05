@@ -86,9 +86,9 @@ void redirectTo(std::string domainName,Email email){
 
         // Assign values to the server address.
         srv_addr.sin_family = AF_INET; // IPv4.
-        srv_addr.sin_port   = htons (28932); // Port Number.
+        srv_addr.sin_port   = htons (28942); // Port Number.
 
-        rst = inet_pton (AF_INET, "10.117.11.124", &srv_addr.sin_addr); /* To
+        rst = inet_pton (AF_INET, "127.50.30.11", &srv_addr.sin_addr); /* To
                                       * type conversion of the pointer here. */
         if (rst <= 0)
         {
@@ -150,7 +150,7 @@ void redirectTo(std::string domainName,Email email){
         rst=recv(sfd,buf,BUF_SIZE,0);
         printf(">%s\n",buf);
         std::vector<std::string> data=split(email.getBody(),'}');
-        std::cout<<email.getBody()<<"\n";
+        std::cout<<"==="<<email.getBody()<<"\n";
         for(int dataLength=1;dataLength<data.size();dataLength++){
             memset(buf,'\0',BUF_SIZE);
             std::cout<<data[dataLength]<<"\n";
@@ -163,7 +163,7 @@ void redirectTo(std::string domainName,Email email){
             printf(">%s\n",buf_);
             rst=write(sfd,buf_,256);
             checkSend(rst);
-            //sleep(1);
+            sleep(1);
             if(dataLength==data.size()-1){
                 break;
             }
@@ -200,6 +200,7 @@ void fill(){
     for(int index=0;index<10001;index++){
         emailList[index].clear();
     }
+    countOfName=0;
     std::ifstream readFile("temporaryFilling.txt");
     std::string line;
     int index=0;
@@ -395,7 +396,7 @@ int main (){
                     //checking for domain names
                     std::vector<std::string> domainFrom=split(email.getFromId(),'@');
                     std::vector<std::string> domainTo=split(email.getToId(),'@');
-                    if(domainTo[1]!=domainFrom[1]){
+                    if(domainTo[1]!="abc.com"){
                         //forward to correct server;
                         redirectTo(domainTo[1],email);
                     }
@@ -434,46 +435,46 @@ int main (){
                         break;
                     }
 
-                    //LIST all the emails
-                    rst=recv(cfd,buf,BUF_SIZE,0);
-                    checkRecieve(rst);
-                    printf("---+>>%s\n",buf);
-                    std::string input="+OK "+std::to_string(emailList[nameMapping[fromId]].size());
-                    strcpy(buf,input.c_str());
-                    rst=write(cfd,buf,BUF_SIZE);
-                    checkSend(rst);
-                    for(int index=0;index<=emailList[nameMapping[fromId]].size();index++){
-                        std::string input="";
-                        if(index==emailList[nameMapping[fromId]].size()){
-                            for(int i=0;i<BUF_SIZE;i++){
-                                buf[i]='\0';
-                            }
-                            buf[0]='.';
-                            printf("-->>>>%s\n",buf);
-                            printf("-->index->%d\n",index);
-                            rst=write(cfd,buf,BUF_SIZE);
-                            checkSend(rst);
-                            break;
-                        }
-                        int dataSize=emailList[nameMapping[fromId]][index].getBody().size();
-                        index++;
-                        input=""+std::to_string(index)+" "+std::to_string(dataSize);
-                        index--;
-                        strcpy(buf,input.c_str());
-                        printf("-->>>%s\n",buf);
-                        rst=write(cfd,buf,BUF_SIZE);
-                        checkSend(rst);
-                        printf("-->index->%d\n",index);
-                        //sleep(1);
-                    }
-
                     while(true){
                         getLockOnDirectory();
+                        //LIST all the emails
+                        rst=recv(cfd,buf,BUF_SIZE,0);
+                        checkRecieve(rst);
+                        printf("---+>>%s\n",buf);
+                        std::string input="+OK "+std::to_string(emailList[nameMapping[fromId]].size());
+                        strcpy(buf,input.c_str());
+                        rst=write(cfd,buf,BUF_SIZE);
+                        checkSend(rst);
+                        for(int index=0;index<=emailList[nameMapping[fromId]].size();index++){
+                            std::string input="";
+                            if(index==emailList[nameMapping[fromId]].size()){
+                                for(int i=0;i<BUF_SIZE;i++){
+                                    buf[i]='\0';
+                                }
+                                buf[0]='.';
+                                printf("-->>>>%s\n",buf);
+                                printf("-->index->%d\n",index);
+                                rst=write(cfd,buf,BUF_SIZE);
+                                checkSend(rst);
+                                break;
+                            }
+                            int dataSize=emailList[nameMapping[fromId]][index].getBody().size();
+                            index++;
+                            input=""+std::to_string(index)+" "+std::to_string(dataSize);
+                            index--;
+                            strcpy(buf,input.c_str());
+                            printf("-->>>%s\n",buf);
+                            rst=write(cfd,buf,BUF_SIZE);
+                            checkSend(rst);
+                            printf("-->index->%d\n",index);
+                            //sleep(1);
+                        }
+
                         printf("entering loop\n");
                         rst=recv(cfd,buf,BUF_SIZE,0);
                         checkRecieve(rst);
                         printf("here====%s\n",buf);
-                        std::string input(buf);
+                        input=buf;
                         if(buf[0]=='L'){
                             std::vector<std::string> dataSplit=split(input,' ');
                             std::stringstream ss1(dataSplit[1]);
