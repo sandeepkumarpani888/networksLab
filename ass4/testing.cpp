@@ -20,7 +20,7 @@ void fillEmail(std::vector<Email>& emailList) {
     int counter1 = 0;
 
     while(std::getline(readFile, line)) {
-        line = "/home/abinashmeher999/github/networksLab/ass4/emailData/" + line;
+        line = "/home/sandeep/Networks_lab/ass4/emailData/" + line;
         int size1 = line.size();
         std::cout << line << "\n";
 
