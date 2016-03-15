@@ -87,7 +87,7 @@ void redirectTo(std::string domainName,Email email){
         srv_addr.sin_family = AF_INET; // IPv4.
         srv_addr.sin_port   = htons (28932); // Port Number.
 
-        rst = inet_pton (AF_INET, "10.117.11.117", &srv_addr.sin_addr); /* To
+        rst = inet_pton (AF_INET, "10.117.11.126", &srv_addr.sin_addr); /* To
                                       * type conversion of the pointer here. */
         if (rst <= 0)
         {

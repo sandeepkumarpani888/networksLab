@@ -126,7 +126,7 @@ int main ()
 
                 srv_addr.sin_port   = htons (28962); // Port Number.
 
-                rst = inet_pton (AF_INET, "10.117.11.117", &srv_addr.sin_addr); /* To
+                rst = inet_pton (AF_INET, "10.117.11.126", &srv_addr.sin_addr); /* To
                                               * type conversion of the pointer here. */
                 if (rst <= 0)
                 {
@@ -313,7 +313,7 @@ int main ()
                 memset (&srv_addr, 0, addrlen);
                 srv_addr.sin_family = AF_INET; // IPv4.
                 srv_addr.sin_port   = htons (28962); // Port Number.
-                rst = inet_pton (AF_INET, "10.117.11.117", &srv_addr.sin_addr);
+                rst = inet_pton (AF_INET, "10.117.11.126", &srv_addr.sin_addr);
                 rst = connect (sfd, (struct sockaddr *) &srv_addr, addrlen);
                 checkConnect(rst);
                 //
@@ -338,7 +338,7 @@ int main ()
 
                 srv_addr.sin_port   = htons (28962); // Port Number.
 
-                rst = inet_pton (AF_INET, "10.117.11.117", &srv_addr.sin_addr); /* To
+                rst = inet_pton (AF_INET, "10.117.11.126", &srv_addr.sin_addr); /* To
                                               * type conversion of the pointer here. */
                 if (rst <= 0)
                 {
