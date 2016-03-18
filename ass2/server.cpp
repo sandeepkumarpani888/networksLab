@@ -168,8 +168,8 @@ int main ()
                 FD_SET(cfd[i],&rd);
             }
         }
-        tm.tv_sec=3;
-        tm.tv_usec = 0;
+        tm.tv_sec=0;
+        tm.tv_usec = 10;
         printf("entering again\n");
         rst = select (100, &rd,NULL,NULL,&tm);
         check_select(rst);
