@@ -5,6 +5,8 @@ all: client test abc xyz
 client: client.cpp email.h
 	${CXX} ${CXXFLAGS} client.cpp -o client.out
 
+clientg: clientgaruda.cpp email.h
+	${CXX} ${CXXFLAGS} clientgaruda.cpp -o clientg.out
 test: testing.cpp email.h
 	${CXX} ${CXXFLAGS} testing.cpp -o test.out
 
@@ -15,4 +17,4 @@ xyz: serverXYZ.cpp email.h
 	${CXX} ${CXXFLAGS} serverXYZ.cpp -o xyz.out
 
 clean:
-	rm client.out abc.out xyz.out test.out
+	rm client.out abc.out xyz.out test.out clientg.out
