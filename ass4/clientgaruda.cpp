@@ -14,7 +14,7 @@
 #include "email.h"
 
 int port_num = 23465;
-#define BUF_SIZE 256
+#define BUF_SIZE 1024
 
 int checkRecieve(int rst) {
     if(rst == -1) {
@@ -471,6 +471,30 @@ int main () {
                 rst = connect (sfd, (struct sockaddr*) &srv_addr, addrlen);
                 checkConnect(rst);
                 printf("CONNECTION SUCCESSFUL!!\n");
+
+                fd_set readfds;
+                FD_ZERO(&readfds);
+                FD_SET(sfd, &readfds);
+
+                FD_ZERO(&readfds);
+                FD_SET(sfd, &readfds);
+                rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
+
+                if(FD_ISSET(sfd, &readfds)) {
+                    memset(buf, '\0', BUF_SIZE);
+                    rst = recv(sfd, buf, BUF_SIZE, 0);
+                }
+
+                printf("Server>%s\n", buf);
+
+                if(buf[0] == '-') {
+                    rst = close(sfd);
+                    checkClose(rst);
+                    printf("Server not ready\n");
+                    fflush(stdout);
+                    return 0;
+                }
+
             }
 
             fd_set readfds;
@@ -479,13 +503,14 @@ int main () {
             std::string input;
             input = "USER " + fromId + "\r\n";
             strcpy(buf, input.c_str());
-            rst = send(sfd, buf, BUF_SIZE, 0);
+            rst = send(sfd, buf, strlen(buf), 0);
             checkSend(rst);
             FD_ZERO(&readfds);
             FD_SET(sfd, &readfds);
             rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
 
             if(FD_ISSET(sfd, &readfds)) {
+                memset(buf, '\0', BUF_SIZE);
                 rst = recv(sfd, buf, BUF_SIZE, 0);
             }
 
@@ -501,23 +526,26 @@ int main () {
             }
 
             //Got the email id
-
             printf("Enter the password?\n>");
             std::string password;
             std::cin >> password;
             input = "PASS " + password + "\r\n";
+            memset(buf, '\0', BUF_SIZE);
             strcpy(buf, input.c_str());
-            rst = send(sfd, buf, BUF_SIZE, 0);
+            printf("%s", buf);
+            rst = send(sfd, buf, strlen(buf), 0);
             checkSend(rst);
             FD_ZERO(&readfds);
             FD_SET(sfd, &readfds);
             rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
 
             if(FD_ISSET(sfd, &readfds)) {
+                memset(buf, '\0', BUF_SIZE);
                 rst = recv(sfd, buf, BUF_SIZE, 0);
             }
 
             printf("Server>%s\n", buf);
+            fflush(stdout);
 
             if(buf[0] == '-') {
                 rst = close(sfd);
@@ -532,21 +560,24 @@ int main () {
 
             //select one of them
             while(true) {
-
+                fprintf(stderr, "here\n");
                 //Get the list of all the emails present
+                memset(buf, '\0', BUF_SIZE);
                 input = "LIST\r\n";
-                strcpy(buf, input.c_str());
-                rst = send(sfd, buf, BUF_SIZE, 0);
+                strcpy(buf, "LIST\r\n");
+                sleep(5);
+                rst = send(sfd, buf, strlen(buf), 0);
                 checkSend(rst);
-                FD_ZERO(&readfds);
-                FD_SET(sfd, &readfds);
-                rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
+                //FD_ZERO(&readfds);
+                //FD_SET(sfd, &readfds);
+                //rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
 
-                if(FD_ISSET(sfd, &readfds)) {
-                    rst = recv(sfd, buf, BUF_SIZE, 0);
-                }
+                //if(FD_ISSET(sfd, &readfds)) {
+                    //memset(buf, '\0', BUF_SIZE);
+                    //rst = recv(sfd, buf, BUF_SIZE, 0);
+                //}
 
-                printf(">%s\n", buf);
+                //printf(">%s\n", buf);
                 int countOfEmails = 0;
 
                 while(true) {
@@ -556,12 +587,19 @@ int main () {
                     rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
 
                     if(FD_ISSET(sfd, &readfds)) {
-                        rst = recv(sfd, buf, BUF_SIZE, 0);
+                        recv:
+                        memset(buf, '\0', BUF_SIZE);
+                        rst = recv(sfd, buf, BUF_SIZE - 1, 0);
+                        printf("%s", buf);
+                        while (rst == BUF_SIZE - 1) {
+                            goto recv;
+                        }
+                        break;
                     }
 
                     sleep(1);
-                    input = buf;
-                    printf("%s..\n", buf);
+                    //input = buf;
+                    //printf("%s..\n", buf);
 
                     if(strlen(buf) && buf[0] == '.') {
                         break;
@@ -575,16 +613,17 @@ int main () {
                 printf("Select the id of the email you want to read?\n>");
                 int indexOfEmail = 0;
                 scanf("%d", &indexOfEmail);
-                input = "LIST " + std::to_string(indexOfEmail) + "\r\n";
+                input = "RETR " + std::to_string(indexOfEmail) + "\r\n";
                 memset(buf, '\0', BUF_SIZE);
                 strcpy(buf, input.c_str());
-                rst = send(sfd, buf, BUF_SIZE, 0);
+                rst = send(sfd, buf, strlen(buf), 0);
                 checkSend(rst);
                 sleep(1);
                 FD_ZERO(&readfds);
                 FD_SET(sfd, &readfds);
                 rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
 
+                sleep(2);
                 if(FD_ISSET(sfd, &readfds)) {
                     rst = recv(sfd, buf, BUF_SIZE, 0);
                 }
