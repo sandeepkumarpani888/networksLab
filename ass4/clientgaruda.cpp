@@ -470,7 +470,6 @@ int main () {
                 /***************** Connect to the server ************************/
                 rst = connect (sfd, (struct sockaddr*) &srv_addr, addrlen);
                 checkConnect(rst);
-                printf("CONNECTION SUCCESSFUL!!\n");
 
                 fd_set readfds;
                 FD_ZERO(&readfds);
@@ -485,7 +484,8 @@ int main () {
                     rst = recv(sfd, buf, BUF_SIZE, 0);
                 }
 
-                printf("Server>%s\n", buf);
+                //printf("Server>%s\n", buf);
+                printf("CONNECTION SUCCESSFUL!!\n");
 
                 if(buf[0] == '-') {
                     rst = close(sfd);
@@ -560,12 +560,10 @@ int main () {
 
             //select one of them
             while(true) {
-                fprintf(stderr, "here\n");
                 //Get the list of all the emails present
                 memset(buf, '\0', BUF_SIZE);
                 input = "LIST\r\n";
                 strcpy(buf, "LIST\r\n");
-                sleep(5);
                 rst = send(sfd, buf, strlen(buf), 0);
                 checkSend(rst);
                 //FD_ZERO(&readfds);
@@ -573,8 +571,8 @@ int main () {
                 //rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
 
                 //if(FD_ISSET(sfd, &readfds)) {
-                    //memset(buf, '\0', BUF_SIZE);
-                    //rst = recv(sfd, buf, BUF_SIZE, 0);
+                //memset(buf, '\0', BUF_SIZE);
+                //rst = recv(sfd, buf, BUF_SIZE, 0);
                 //}
 
                 //printf(">%s\n", buf);
@@ -587,17 +585,18 @@ int main () {
                     rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
 
                     if(FD_ISSET(sfd, &readfds)) {
-                        recv:
+recv:
                         memset(buf, '\0', BUF_SIZE);
                         rst = recv(sfd, buf, BUF_SIZE - 1, 0);
                         printf("%s", buf);
+
                         while (rst == BUF_SIZE - 1) {
                             goto recv;
                         }
+
                         break;
                     }
 
-                    sleep(1);
                     //input = buf;
                     //printf("%s..\n", buf);
 
@@ -624,39 +623,50 @@ int main () {
                 rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
 
                 sleep(2);
+
                 if(FD_ISSET(sfd, &readfds)) {
-                    rst = recv(sfd, buf, BUF_SIZE, 0);
-                }
-
-                printf("--->>%s\n", buf);
-
-                //sleep(5);
-                if(buf[0] == '+') {
-                    printf("%s\n", buf);
-
-                    while(true) {
-                        FD_ZERO(&readfds);
-                        FD_SET(sfd, &readfds);
-                        rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
-
-                        if(FD_ISSET(sfd, &readfds)) {
-                            rst = recv(sfd, buf, BUF_SIZE, 0);
-                        }
-
-                        input = buf;
-                        std::cout << "message+ " << input << "\n";
-
-                        if(input.size() == 1 && input[0] == '.') {
-                            break;
-                        }
-
-                        sleep(1);
+                recv_body:
+                    memset(buf, '\0', BUF_SIZE);
+                    rst = recv(sfd, buf, BUF_SIZE - 1, 0);
+                    for (int i = 0; i < rst; i++) {
+                        printf("%c",buf[i]);
                     }
-                } else {
-                    printf("message- %s\n", buf);
-                }
+                    while (rst == BUF_SIZE - 1) {
+                        goto recv_body;
+                    }
+               }
 
-                printf("Do you wish to recieve more messages?\n");
+                /*
+                 *                printf("--->>%s\n", buf);
+                 *
+                 *                //sleep(5);
+                 *                if(buf[0] == '+') {
+                 *                    printf("%s\n", buf);
+                 *
+                 *                    while(true) {
+                 *                        FD_ZERO(&readfds);
+                 *                        FD_SET(sfd, &readfds);
+                 *                        rst = select(sfd + 1, &readfds, NULL, NULL, NULL);
+                 *
+                 *                        if(FD_ISSET(sfd, &readfds)) {
+                 *                            rst = recv(sfd, buf, BUF_SIZE, 0);
+                 *                        }
+                 *
+                 *                        input = buf;
+                 *                        std::cout << "message+ " << input << "\n";
+                 *
+                 *                        if(input.size() == 1 && input[0] == '.') {
+                 *                            break;
+                 *                        }
+                 *
+                 *                        sleep(1);
+                 *                    }
+                 *                } else {
+                 *                    printf("message- %s\n", buf);
+                 *                }
+                 */
+
+                printf("\nDo you wish to recieve more messages?\n");
                 printf("Yes(1) or No(2)\n");
                 int opertaionType;
                 scanf("%d", &opertaionType);
