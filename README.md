@@ -1,2 +1,2 @@
-# networksLab
+# NetworksLab
 Networks Lab Assignment
